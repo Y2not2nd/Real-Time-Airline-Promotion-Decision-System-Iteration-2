@@ -25,7 +25,7 @@ promo_consumer = KafkaConsumer(
 # ---------------------------
 
 # More flights for Iteration 2
-FLIGHT_COUNT = 40                 # how many flights to simulate
+FLIGHT_COUNT = 50                 # how many flights to simulate
 
 # Base booking probability, before time / promo factors
 BOOKING_PROB_BASE = 0.02
