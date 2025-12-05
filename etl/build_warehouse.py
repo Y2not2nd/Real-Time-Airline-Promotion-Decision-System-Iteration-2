@@ -102,7 +102,10 @@ def build_fact_inventory():
             "booked_seats",
             "total_seats",
             "load_factor",
-            "minutes_to_departure"
+            "minutes_to_departure",
+            # Iteration 2 additions
+            pl.col("days_to_departure").cast(pl.Float64).alias("days_to_departure"),
+            pl.col("booking_velocity_per_hour").cast(pl.Float64).alias("booking_velocity_per_hour"),
         )
     )
 
@@ -128,7 +131,9 @@ def build_fact_promotions():
             "decision_source",
             "discount_percentage",
             "current_load_factor",
-            "minutes_to_departure"
+            "minutes_to_departure",
+            # Iteration 2 additions
+            pl.col("days_to_departure").cast(pl.Float64).alias("days_to_departure"),
         )
     )
 
