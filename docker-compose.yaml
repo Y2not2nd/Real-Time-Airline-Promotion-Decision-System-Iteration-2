@@ -3,7 +3,6 @@ version: "3.8"
 services:
   zookeeper:
     image: confluentinc/cp-zookeeper:7.5.0
-    hostname: zookeeper
     container_name: zookeeper
     ports:
       - "2181:2181"
@@ -13,7 +12,6 @@ services:
 
   kafka:
     image: confluentinc/cp-kafka:7.5.0
-    hostname: kafka
     container_name: kafka
     depends_on:
       - zookeeper
@@ -22,19 +20,15 @@ services:
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-
       KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
-
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
-
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "false"
 
   postgres:
     image: postgres:16
-    hostname: postgres
     container_name: postgres
     ports:
       - "5432:5432"
@@ -47,10 +41,52 @@ services:
 
   redis:
     image: redis:7
-    hostname: redis
     container_name: redis
     ports:
       - "6379:6379"
+
+  # ---------------------------
+  # ETL runner (scheduled)
+  # ---------------------------
+  etl-runner:
+    image: python:3.10-slim
+    container_name: etl-runner
+    depends_on:
+      - postgres
+    volumes:
+      - .:/app
+    working_dir: /app
+    command: >
+      sh -c "
+      pip install polars psycopg2-binary &&
+      while true; do
+        echo '⏳ Running ETL';
+        python etl/build_warehouse.py;
+        sleep 1800;
+      done
+      "
+
+  # ---------------------------
+  # Prometheus
+  # ---------------------------
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./observability/prometheus.yml:/etc/prometheus/prometheus.yml
+
+  # ---------------------------
+  # Grafana
+  # ---------------------------
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prometheus
 
 volumes:
   pgdata:
