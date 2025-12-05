@@ -28,11 +28,15 @@ def ensure_dir(path):
     os.makedirs(path, exist_ok=True)
 
 def write_event(topic, event):
-    date_str = dt.date.today().isoformat()
+    now = dt.datetime.utcnow()
+    date_str = now.date().isoformat()
+    hour_str = f"{now.hour:02d}"
+
     topic_path = os.path.join(BASE_PATH, topic)
     ensure_dir(topic_path)
 
-    file_path = os.path.join(topic_path, f"{date_str}.jsonl")
+    # Hourly partitions keep files smaller and ETL friendlier
+    file_path = os.path.join(topic_path, f"{date_str}_{hour_str}.jsonl")
 
     with open(file_path, "a", encoding="utf-8") as f:
         f.write(json.dumps(event) + "\n")
